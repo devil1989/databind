@@ -26,3 +26,22 @@ data>DOM元素的数据绑定
 				一次操作只改变一个key（不管改变的是string这种简单类型还是object复杂类型），修改后就直接执行对应的callback
 				但是，很多情况下，比如说for循环，改变了许多key，因为for循环的js执行很快，而且其实改变的都是同一个父节点下的key，每个key改变就执行回调是很浪费的事情
 				可以在set的时候【或者是在中间层内】，设置一个setTimeout，等js执行完，给所有的key寻找一个统一的父节点，然后再渲染
+
+
+
+
+
+执行流程：
+	1. monitor=new Observer({});//创建数据监听对象
+	2. monitor.monit(data);//监控data数据，data数据一旦变更，就会触发观察者的发布事件：observer.publish(变化的属性名称)
+	3. new Compile({//根据template和data创建了dom节点，最后把节点插入wrapper；创建的dom节点和所有子节点，监听他们的v-data属性，该属性v-data和data做了绑定，只要data改变，包含该属性的dom节点就会对应变更；
+		wrapper:"body",
+		data:{},
+		template:""
+	});//创建元素
+
+	3.修改data中的属性，会触发observer.publish(变化的属性名称)，该事件会寻找绑定该属性的所有dom节点，然后修改dom重新渲染【其中用了文档碎片，提升性能呢】;
+	4.优化，因为每个属性修改，都会触发observer.publish，然后再遍历所有有添加监听的dom节点，这个过程比较烦
+
+
+	
