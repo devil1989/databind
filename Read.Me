@@ -44,4 +44,27 @@ data>DOM元素的数据绑定
 	4.优化，因为每个属性修改，都会触发observer.publish，然后再遍历所有有添加监听的dom节点，这个过程比较烦
 
 
-	
+
+
+
+数据双向绑定：view和model之间的绑定
+
+view：视图，说白了就是html中dom节点的展示
+model：数据模型，说白了就是js中的数据对象
+
+view ---> model绑定：修改dom元素（input,textarea,select）的数据，导致model产生变化，只要给dom元素绑定change事件，触发事件的时候修改model即可，不细讲
+model ---> view绑定：修改model数据，从而让dom元素产生改变，导致页面重新渲染
+
+model ---> view绑定的方法：1.发布订阅模式（例如backbone.js）；2.数据劫持(vue.js)；3.脏检查(angular.js) 
+
+下面写了个简单的demo，借鉴自vue.js,详细说明如何用“发布订阅模式+数据劫持”实现model到view的数据绑定
+
+1.Observer ：观察者模式类，1.添加对数据的监控，2.订阅+发布
+2.Compile ：模板编译器，1.根据模板生成dom树，2.给所有绑定了{{data}}的dom节点添加订阅事件（subscribe）
+3.VM：ViewModel，把Observer和Compile结合在一起，生成dom树，并完成model ---> view绑定
+
+
+
+
+
+

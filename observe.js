@@ -123,7 +123,7 @@ Observer.prototype = {
   @param
  	observe ：Observer对象,//依赖观察者模式的对象
 	data：数据，
-	template：魔板，
+	template：模板，
 	//wrapper：数据放到哪个dom元素中去（是append进去）
 	handles:{
 		
