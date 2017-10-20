@@ -2,8 +2,8 @@
 数据双向绑定：
 	定义：view和model之间的绑定
 	目的：提高开发效率，统一处理数据，便于产品维护升级等
-	备注：一般数据单向绑定即可（model ---> view绑定），数据双向绑定容易出现循环绑定问题，例如model改变导致view改变，view改变有会导致model改变，
-	     如果处理不当容易导致无限循环；处理这种循环绑定，提升了框架复杂度。
+	备注：一般数据单向绑定即可（model ---> view绑定），数据双向绑定容易出现循环绑定问题，例如model改变导致view改变，
+	     view改变有会导致model改变，如果处理不当容易导致无限循环；处理这种循环绑定，提升了框架复杂度。
 
 view：视图，说白了就是html中dom节点的展示
 model：数据模型，说白了就是js中的数据对象,例如var data={persong：{sex:"",age:"",name:""},from:""}
@@ -24,12 +24,10 @@ model ---> view绑定：
 
 
 
-下面写了个简易的demo，借鉴自vue.js,详细说明如何用“发布订阅模式+数据劫持”实现model到view的数据单向绑定（阅读基础：需要对发布订阅者模式有所了解）
+下面写了个简易的demo，借鉴自vue.js,用“发布订阅模式+数据劫持”实现model到view的数据单向绑定（阅读基础：需要对发布订阅者模式有所了解）
 我的项目git地址：https://github.com/devil1989/databind 【为了防止世界被破坏，为了守护世界的和平，贯彻爱与真实的邪恶.... 请轻点喷】
 
-
-
-
+//demo start
 使用方法：new VM({data:data,template:template});
 	<!DOCTYPE html>
 	<html lang="en">
@@ -84,7 +82,7 @@ model ---> view绑定：
 
 	1.Observer (发布订阅模式+数据监控)：
 
-		功能: “监控model", "订阅【给dom节点绑定对应的key】", "发布[根据key的变动，找到所有和key绑定的dom节点，执行function来改变dom节点]"
+		功能: “监控model", "订阅", "发布"
 		
 		
 		函数说明：
@@ -147,8 +145,12 @@ model ---> view绑定：
 						set: function(newVal) {
 							if (newVal !== val) {
 								val = newVal;
-								me.monit(newVal, base); //设置新值需要重新监控
-								me.publish(base, newVal); //(baseUrl+"."+key)作为观察者模式中的监听的那个key，也可以说是监听的那个事件
+
+								//设置新值需要重新监控
+								me.monit(newVal, base); 
+
+								//(baseUrl+"."+key)作为观察者模式中的监听的那个key，也可以说是监听的那个事件
+								me.publish(base, newVal); 
 							}
 						}
 					});
@@ -206,7 +208,7 @@ model ---> view绑定：
 		函数说明：
 			transToFrament：把页面上的dom节点转化成文档碎片，防止dom频繁操作影响页面性能
 			travelAllNodes：遍历文档碎片节点下所有的node节点（用到了函数递归调用）
-			compileNode：编译node节点，把节点中的"{{key}}"替换成对应的值【node节点类型可以分为多种，各个类型节点如何编译就不讲了，看源码】
+			compileNode：编译node节点，把节点中的"{{key}}"替换成对应的值
 			bindKeyToNode：执行Observer中的subscribe【订阅】操作，（这个方法很重要）
 
 		部分源码如下：
