@@ -14,11 +14,7 @@ view ---> model绑定：
 
 model ---> view绑定：
 	目的：修改model数据，从而让dom元素产生改变，导致页面重新渲染
-	方法：1.发布订阅模式（例如backbone.js）；2.数据劫持(vue.js)；3.脏检查(angular.js) 
-	简易思路（基于发布订阅模式和数据劫持）：
-		1.通过defineProperty来监控model中的所有属性（对每一个属性都监控）
-		2.编译template生成DOM树，给所有DOM节点绑定model中对应的key（通过function来实现“dom节点和model中的key”的绑定）
-		3.修改model中属性的时候，会自动触发属性的set事件，set事件里面调用第2步中的function（该function根据最新的key的值，来操作dom重新渲染）
+	方法：1.发布订阅模式（例如backbone.js）；2.数据劫持(vue.js)；3.脏值检查(angular.js) 
 
 
 
@@ -26,6 +22,12 @@ model ---> view绑定：
 
 下面写了个简易的demo，借鉴自vue.js,用“发布订阅模式+数据劫持”实现model到view的数据单向绑定（阅读基础：需要对发布订阅者模式有所了解）
 我的项目git地址：https://github.com/devil1989/databind 【为了防止世界被破坏，为了守护世界的和平，贯彻爱与真实的邪恶.... 请轻点喷】
+
+
+简易思路（基于发布订阅模式和数据劫持）：
+		1.通过defineProperty来监控model中的所有属性（对每一个属性都监控）
+		2.编译template生成DOM树，给所有DOM节点绑定model中对应的key（通过function来实现“dom节点和model中的key”的绑定）
+		3.修改model中属性的时候，会自动触发属性的set事件，set事件里面调用第2步中的function（该function根据最新的key的值，来操作dom重新渲染）
 
 //demo start
 使用方法：new VM({data:data,template:template});
@@ -217,7 +219,7 @@ model ---> view绑定：
 			};
 			Compile.prototype = {
 
-				//把原有节点转化成Frament节点，createDocumentFragment创建文档碎片节点，不会导致页面渲染，只有最后插入到文档时，才会渲染
+				//把原有节点转化成Frament节点，createDocumentFragment创建文档碎片节点，不会导致页面渲染
 				transToFrament: function(el) {
 					var fragment = document.createDocumentFragment(),
 						child;
