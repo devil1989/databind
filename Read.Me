@@ -103,7 +103,7 @@ model ---> view绑定：
 
 			defineKey里面的set方法：更新并监控新的值，执行publish函数（publish函数会根据这个key来执行所有绑定的function）
 
-			subscribe方法【订阅】：给model中的某个key（例如person.age.range)添加绑定的function。subscribe是在遍历dom节点的时候添加的
+			subscribe方法【订阅】：给model中的某个key（例如person.age.range)添加绑定的function ； subscribe是在遍历dom节点的时候添加的
 
 			publish方法【发布】：根据key来执行绑定在这个key上的所有函数，比如说person.age.range这个key，它变动的时候，
 							  publish会执行绑定在person.age.range这个key上所有的function
