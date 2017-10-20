@@ -2,11 +2,15 @@
 数据双向绑定：
 	定义：view和model之间的绑定
 	目的：提高开发效率，统一处理数据，便于产品维护升级等
+	备注：一般数据单向绑定即可（model ---> view绑定），数据双向绑定容易出现循环绑定问题，例如model改变导致view改变，view改变有会导致model改变，
+	     如果处理不当容易导致无限循环；处理这种循环绑定，提升了框架复杂度。
 
 view：视图，说白了就是html中dom节点的展示
 model：数据模型，说白了就是js中的数据对象,例如var data={persong：{sex:"",age:"",name:""},from:""}
 
-view ---> model绑定：修改dom元素（input,textarea,select）的数据，导致model产生变化，只要给dom元素绑定change事件，触发事件的时候修改model即可，不细讲
+view ---> model绑定：
+	修改dom元素（input,textarea,select）的数据，导致model产生变化，只要给dom元素绑定change事件，触发事件的时候修改model即可，不细讲
+
 
 model ---> view绑定：
 	目的：修改model数据，从而让dom元素产生改变，导致页面重新渲染
@@ -16,14 +20,17 @@ model ---> view绑定：
 		2.编译template生成DOM树，给所有DOM节点绑定model中对应的key（通过function来实现“dom节点和model中的key”的绑定）
 		3.修改model中属性的时候，会自动触发属性的set事件，set事件里面调用第2步中的function（该function根据最新的key的值，来操作dom重新渲染）
 
-备注：一般数据单向绑定即可（model ---> view绑定），数据双向绑定容易出现循环绑定问题，例如model改变导致view改变，view改变有会导致model改变，如果处理不当容易导致无限循环；处理这种循环绑定，提升了框架复杂度
+
 
 
 
 下面写了个简易的demo，借鉴自vue.js,详细说明如何用“发布订阅模式+数据劫持”实现model到view的数据单向绑定（阅读基础：需要对发布订阅者模式有所了解）
 我的项目git地址：https://github.com/devil1989/databind 【为了防止世界被破坏，为了守护世界的和平，贯彻爱与真实的邪恶.... 请轻点喷】
 
-使用方式：
+
+
+
+使用方法：new VM({data:data,template:template});
 	<!DOCTYPE html>
 	<html lang="en">
 	<head>
@@ -45,6 +52,7 @@ model ---> view绑定：
 				
 			</div>
 		</template>
+
 		<script type="text/javascript">
 			(function(){
 				window.data={name:"jeffrey",age:28,des:"测试"};
@@ -64,216 +72,227 @@ model ---> view绑定：
 	</html>
 
 
-1.Observer ：发布订阅模式+数据劫持（偷懒写在一起了），功能包含 “监控model", "订阅【给dom节点绑定对应的key】", "发布[根据key的变动，找到所有和key绑定的dom节点，执行function来改变dom节点]"
-	
-	//说一下主要的函数和数组
-	Observer中的this.subs数组：包含了所有观察者，每个观察者的结构如下：
-		{
-			key："person.age.range"//属性名称,代表model.person.age.range的值
-			actionList：[function(){},function(){}]//函数数组，每一个函数表示一个dom节点和key的绑定；因为一个key（例如person.age.range）可以绑定在多个dom节点上，所以actionList需要是一个数组
-		}
-	monit方法【监控】：遍历object中所有的属性，每个属性用defineKey来定义属性
-	defineKey方法：定义属性的set方法，这样属性改变的时候，就会自动执行set方法里面的内容
-	defineKey里面的set方法：设置并监控新的值，并执行publish函数（publish函数会根据这个key来寻找并执行所有绑定的function）
-	subscribe方法【订阅】：给model中的某个key（例如person.age.range)添加绑定的function。这个“订阅操作”在遍历dom节点的时候执行，给每个dom节点订阅与它对应的key。
-	publish方法【发布】：根据key来执行绑定在这个key上的所有函数，比如说person.age.range这个key，它变动的时候，publish会执行绑定在person.age.range这个key上的所有function【每个function操作1个对应的dom节点】
-	
 
-	
-	//源码如下：
-	var Observer = function(opts) {
-		this.id = (opts && opts.id) ? opts.id : +new Date();
-		this.opts = opts;
-		this.subs = []; //观察者数组
-	}
-	Observer.prototype = {
+详细说明：
 
-		//监控数据
-		monit: function(data, baseUrl) {
-			var me = this;
-			baseUrl = baseUrl || "";
-			var isTypeMatch = (data && typeof data === "object");
-			if (isTypeMatch) {
-				Object.keys(data).forEach(function(key) {
-					var base = baseUrl ? (baseUrl + "." + key) : key;
-					me.defineKey(data, key, data[key], baseUrl); //定义自己
-					me.monit(data[key], base); //递归【定义的是下一层】
-				});
+	1.Observer (发布订阅模式+数据监控)：
+
+		功能: “监控model", "订阅【给dom节点绑定对应的key】", "发布[根据key的变动，找到所有和key绑定的dom节点，执行function来改变dom节点]"
+		
+		
+		函数说明：
+			Observer中的this.subs数组：包含了所有观察者，每个观察者的结构如下：
+				{
+					//属性名称,代表model.person.age.range的值
+					key："person.age.range"
+
+					//函数数组，每一个函数表示一个dom节点和key的绑定；因为一个key（例如person.age.range）可以绑定在多个dom节点上，所以actionList需要是一个数组
+					actionList：[function(){},function(){}]
+				}
+
+			monit方法【监控】：遍历object中所有的属性，每个属性用defineKey来定义属性
+			defineKey方法：定义属性的set方法，这样属性改变的时候，就会自动执行set方法里面的内容
+			defineKey里面的set方法：设置并监控新的值，并执行publish函数（publish函数会根据这个key来寻找并执行所有绑定的function）
+			subscribe方法【订阅】：给model中的某个key（例如person.age.range)添加绑定的function。这个“订阅操作”在遍历dom节点的时候执行，给每个dom节点订阅与它对应的key。
+			publish方法【发布】：根据key来执行绑定在这个key上的所有函数，比如说person.age.range这个key，它变动的时候，publish会执行绑定在person.age.range这个key上的所有function【每个function操作1个对应的dom节点】
+		
+
+		
+		部分源码如下：
+			var Observer = function(opts) {
+				this.id = (opts && opts.id) ? opts.id : +new Date();
+				this.opts = opts;
+				this.subs = []; //观察者数组
 			}
-		},
+			Observer.prototype = {
 
-		//定义数据
-		defineKey: function(data, key, val, baseUrl) {
-			var me = this;
-			var base = baseUrl ? (baseUrl + "." + key) : key;
-
-			Object.defineProperty(data, key, {
-				enumerable: true,
-				configurable: false,
-				get: function() {
-					return val;
+				//监控数据
+				monit: function(data, baseUrl) {
+					var me = this;
+					baseUrl = baseUrl || "";
+					var isTypeMatch = (data && typeof data === "object");
+					if (isTypeMatch) {
+						Object.keys(data).forEach(function(key) {
+							var base = baseUrl ? (baseUrl + "." + key) : key;
+							me.defineKey(data, key, data[key], baseUrl); //定义自己
+							me.monit(data[key], base); //递归【定义的是下一层】
+						});
+					}
 				},
-				set: function(newVal) {
-					if (newVal !== val) {
-						val = newVal;
-						me.monit(newVal, base); //设置新值需要重新监控
-						me.publish(base, newVal); //(baseUrl+"."+key)作为观察者模式中的监听的那个key，也可以说是监听的那个事件
-					}
-				}
-			});
-		},
 
-		//发布
-		publish: function(key, newVal) {
-			(this.subs || []).forEach(function(sub) {
-				if (sub.key == key) {
-					(sub.actionList || []).forEach(function(action) {
-						action(newVal);
+				//定义数据
+				defineKey: function(data, key, val, baseUrl) {
+					var me = this;
+					var base = baseUrl ? (baseUrl + "." + key) : key;
+
+					Object.defineProperty(data, key, {
+						enumerable: true,
+						configurable: false,
+						get: function() {
+							return val;
+						},
+						set: function(newVal) {
+							if (newVal !== val) {
+								val = newVal;
+								me.monit(newVal, base); //设置新值需要重新监控
+								me.publish(base, newVal); //(baseUrl+"."+key)作为观察者模式中的监听的那个key，也可以说是监听的那个事件
+							}
+						}
 					});
-				}
-			});
-		},
+				},
 
-		//订阅
-		subscribe: function(key, callback) {
-			var tgIdx;
-			var hasExist = this.subs.some(function(unit, idx) {
-				tgIdx = (unit.key === key) ? idx : -1;
-				return (unit.key === key)
-			});
-			if (hasExist) {
-				if (Object.prototype.toString.call(this.subs[tgIdx].actionList) === "[object Array]") {
-					this.subs[tgIdx].actionList.push(callback);
-				} else {
-					this.subs[tgIdx].actionList = [callback];
-				}
-			} else {
-				this.subs.push({
-					key: key,
-					actionList: [callback]
-				});
-			}
-		},
+				//发布
+				publish: function(key, newVal) {
+					(this.subs || []).forEach(function(sub) {
+						if (sub.key == key) {
+							(sub.actionList || []).forEach(function(action) {
+								action(newVal);
+							});
+						}
+					});
+				},
 
-		//取消订阅
-		remove: function(key) {
-			var removeIdx;
-			this.subs.forEach(function(sub, idx) {
-				removeIdx = sub.key === key ? idx : -1;
-				return sub.key === key
-			});
-			if (removeIdx !== -1) {
-				this.subs.splice(removeIdx, 1);
-			}
-		}
-	};
-
-
-2.Compile ：模板编译器，功能包含 “根据模板生成dom树"，"给所有绑定了model属性的dom节点添加订阅事件”
-	
-	主要的方法介绍一下：
-		transToFrament：把页面上的dom节点转化成文档碎片，防止dom频繁操作影响页面性能
-		travelAllNodes：遍历文档碎片节点下所有的node节点（用到了函数递归调用）
-		compileNode：编译node节点，把节点中的"{{key}}"替换成对应的值【node节点类型可以分为多种，各个类型节点如何编译就不讲了，看源码】
-		bindKeyToNode：执行Observer中的subscribe【订阅】操作，（这个方法很重要）
-
-	具体代码如下：
-	var Compile = function(opts) {
-		...
-	};
-	Compile.prototype = {
-
-		//把原有节点转化成Frament节点，createDocumentFragment创建文档碎片节点，不会导致页面渲染，只有最后插入到文档时，才会渲染
-		transToFrament: function(el) {
-			var fragment = document.createDocumentFragment(),
-				child;
-			// 将原生节点拷贝到fragment
-			while (child = el.firstChild) {
-				fragment.appendChild(child);
-			}
-			return fragment;
-		},
-
-		//遍历所有节点
-		travelAllNodes: function(ele) {
-			this.compileNode(ele);
-			([].slice.call(ele.childNodes) || []).forEach(function(node) {
-				this.compileNode(node);
-				if (node.childNodes && node.childNodes.length) {
-					this.travelAllNodes(node);
-				}
-			}.bind(this));
-		},
-
-		/*包含功能
-		 1.渲染node节点
-		 2.给key设置callback函数，函数内操作node节点
-		 */
-		compileNode: function(node) {
-			if (this.isElement(node)) {
-				this.compileElementNode(node);
-			} else if (this.isText(node)) {
-				this.compileTextNode(node);
-			}
-		},
-
-		//绑定key和node节点，key一旦改变，就会触发对应的函数，修改node节点
-		bindKeyToNode: function(key, node) {
-			if (!!key.trim()) {
-				console.log(key);
-				var nodeType = node.nodeType;
-				var regExp = new RegExp("\\{\\{" + key + "\\}\\}");
-				var originTextConetnt;
-				if (nodeType === 2) {
-					originTextConetnt = node.value;
-				} else if (nodeType === 3) {
-					originTextConetnt = node.textContent;
-				}
-
-				this.observer.subscribe(key, function(newVal) {
-					var tgValue = originTextConetnt.replace(regExp, newVal);
-					if (nodeType === 2) {
-						node.value = tgValue;
-					} else if (nodeType === 3) {
-						node.textContent = tgValue;
+				//订阅
+				subscribe: function(key, callback) {
+					var tgIdx;
+					var hasExist = this.subs.some(function(unit, idx) {
+						tgIdx = (unit.key === key) ? idx : -1;
+						return (unit.key === key)
+					});
+					if (hasExist) {
+						if (Object.prototype.toString.call(this.subs[tgIdx].actionList) === "[object Array]") {
+							this.subs[tgIdx].actionList.push(callback);
+						} else {
+							this.subs[tgIdx].actionList = [callback];
+						}
+					} else {
+						this.subs.push({
+							key: key,
+							actionList: [callback]
+						});
 					}
-				});
+				},
+
+				//取消订阅
+				remove: function(key) {
+					var removeIdx;
+					this.subs.forEach(function(sub, idx) {
+						removeIdx = sub.key === key ? idx : -1;
+						return sub.key === key
+					});
+					if (removeIdx !== -1) {
+						this.subs.splice(removeIdx, 1);
+					}
+				}
+			};
+
+
+	2.Compile (模板编译器)：
+		功能： “根据模板生成dom树"，"给所有绑定了model属性的dom节点添加订阅事件”
+
+		函数说明：
+			transToFrament：把页面上的dom节点转化成文档碎片，防止dom频繁操作影响页面性能
+			travelAllNodes：遍历文档碎片节点下所有的node节点（用到了函数递归调用）
+			compileNode：编译node节点，把节点中的"{{key}}"替换成对应的值【node节点类型可以分为多种，各个类型节点如何编译就不讲了，看源码】
+			bindKeyToNode：执行Observer中的subscribe【订阅】操作，（这个方法很重要）
+
+		部分源码如下：
+			var Compile = function(opts) {
+				...
+			};
+			Compile.prototype = {
+
+				//把原有节点转化成Frament节点，createDocumentFragment创建文档碎片节点，不会导致页面渲染，只有最后插入到文档时，才会渲染
+				transToFrament: function(el) {
+					var fragment = document.createDocumentFragment(),
+						child;
+					// 将原生节点拷贝到fragment
+					while (child = el.firstChild) {
+						fragment.appendChild(child);
+					}
+					return fragment;
+				},
+
+				//遍历所有节点
+				travelAllNodes: function(ele) {
+					this.compileNode(ele);
+					([].slice.call(ele.childNodes) || []).forEach(function(node) {
+						this.compileNode(node);
+						if (node.childNodes && node.childNodes.length) {
+							this.travelAllNodes(node);
+						}
+					}.bind(this));
+				},
+
+				/*包含功能
+				 1.渲染node节点
+				 2.给key设置callback函数，函数内操作node节点
+				 */
+				compileNode: function(node) {
+					if (this.isElement(node)) {
+						this.compileElementNode(node);
+					} else if (this.isText(node)) {
+						this.compileTextNode(node);
+					}
+				},
+
+				//绑定key和node节点，key一旦改变，就会触发对应的函数，修改node节点
+				bindKeyToNode: function(key, node) {
+					if (!!key.trim()) {
+						console.log(key);
+						var nodeType = node.nodeType;
+						var regExp = new RegExp("\\{\\{" + key + "\\}\\}");
+						var originTextConetnt;
+						if (nodeType === 2) {
+							originTextConetnt = node.value;
+						} else if (nodeType === 3) {
+							originTextConetnt = node.textContent;
+						}
+
+						this.observer.subscribe(key, function(newVal) {
+							var tgValue = originTextConetnt.replace(regExp, newVal);
+							if (nodeType === 2) {
+								node.value = tgValue;
+							} else if (nodeType === 3) {
+								node.textContent = tgValue;
+							}
+						});
+					}
+				}
+				...
 			}
+
+
+	3.VM：ViewModel，数据单向绑定的入口类，该类把Observer和Compile结合在一起，完成model ---> view绑定，最终生成dom树并渲染
+		
+
+		具体源码如下：
+		var VM = function(opts) {
+			this.opts = opts;
+			this.data = opts.data;
+			this.wrapper = opts.wrapper;
+			this.template = opts.template;
+			this.Observer = (typeof Observer != undefined) ? Observer : opts.Observer;
+			this.Compile = (typeof Compile != undefined) ? Compile : opts.Compile;
+			this.init();
 		}
-		...
-	}
 
-
-3.VM：ViewModel，数据单向绑定的入口类，该类把Observer和Compile结合在一起，完成model ---> view绑定，最终生成dom树并渲染
-	
-
-	具体代码如下：
-	var VM = function(opts) {
-		this.opts = opts;
-		this.data = opts.data;
-		this.wrapper = opts.wrapper;
-		this.template = opts.template;
-		this.Observer = (typeof Observer != undefined) ? Observer : opts.Observer;
-		this.Compile = (typeof Compile != undefined) ? Compile : opts.Compile;
-		this.init();
-	}
-
-	VM.prototype = {
-		init: function() {
-			var opts = this.opts;
-			this.observer = new this.Observer(opts);
-			this.observer.monit(this.data); //监控数据变化，数据已经改变了
-			this.compiler = new this.Compile(Object.assign(opts, {
-				observer: this.observer
-			})); //编译生成节点
-			if (this.wrapper) {
-				this.wrapper.appendChild(this.compiler.getElement());
+		VM.prototype = {
+			init: function() {
+				var opts = this.opts;
+				this.observer = new this.Observer(opts);
+				this.observer.monit(this.data); //监控数据变化，数据已经改变了
+				this.compiler = new this.Compile(Object.assign(opts, {
+					observer: this.observer
+				})); //编译生成节点
+				if (this.wrapper) {
+					this.wrapper.appendChild(this.compiler.getElement());
+				}
+			},
+			get: function() {
+				return this.compiler.getElement();
 			}
-		},
-		get: function() {
-			return this.compiler.getElement();
-		}
-	};
+		};
 
 
 
