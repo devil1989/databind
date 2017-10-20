@@ -3,18 +3,36 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Document</title>
-	<script type="text/javascript" src="./doT.js"></script>
+	<link rel="stylesheet" type="text/css" href="demo.css">
 	<script type="text/javascript" src="./observe.js"></script>
 </head>
 <body>
 	<template id="inner" type="text/template">
 		<!-- 只支持单个属性或者多个属性绑定，不支持计算 -->
 		<div title="{{des}}">
-			<span>age:{{age}}</span>
-			<span>name:{{name}}</span>
-			<div>{{person.age}}</div>
+			<div>
+				<ul id="list">
+					<li ><span >age:</span><input  type="text" name="" value="{{age}}" ><span id="age" style="float: left;">+</span></li>
+					<li><span>name:</span><input type="text" name="" value="{{name}}"></li>
+				</ul>
+			</div>
+			
 		</div>
 	</template>
-	<script type="text/javascript" src="./demo.js"></script>
+	<script type="text/javascript">
+		(function(){
+			window.data={name:"jeffrey",age:28,des:"测试"};
+			var vm=new VM({
+				data:data,
+				template:document.getElementById("inner").innerHTML
+				// wrapper:document.body//可以指定对应容器，也可以不指定容器，直接获取元素，再手动插入对应dom元素
+			});
+			document.body.appendChild(vm.get());
+
+			document.getElementById("age").addEventListener("click",function(){
+				data.age++;
+			});
+		})();
+	</script>
 </body>
 </html>

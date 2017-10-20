@@ -1,0 +1,17 @@
+#list li{
+	overflow: hidden;
+}
+#list li *{
+	float: left;
+	height:20px;
+	width: 60px;
+}
+#age{
+	display: block;
+	margin-left: 10px;
+	height: 30px;
+	width: 30px !important;
+	background-color: #e3e3e3;
+	text-align: center;
+	cursor: pointer;
+}
