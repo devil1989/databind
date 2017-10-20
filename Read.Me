@@ -5,7 +5,7 @@
 	备注：一般数据单向绑定即可（model ---> view绑定），数据双向绑定容易出现循环绑定问题，例如model改变导致view改变，
 	     view改变又会导致model改变，如果处理不当容易导致无限循环；处理这种循环绑定，提升了框架复杂度。
 
-view：视图，说白了就是html中dom节点的展示
+view：视图，说白了就是html中dom树的展示
 model：数据模型，说白了就是js中的数据对象,例如var data={persong：{sex:"",age:"",name:""},from:""}
 
 view ---> model绑定：
@@ -19,14 +19,15 @@ model ---> view绑定：
 
 
 
-上面的东西依照一大堆，没啥多大意义，下面写了个简易的demo，通过demo说明下，整个demo的js不超过300行，仅支持template里面的{{data}}解析绑定
+上面的说得很笼统，下面写了个简易的demo，通过demo说明下，整个demo的js不超过300行，仅支持template里面的{{data}}解析绑定
 我的项目git地址：https://github.com/devil1989/databind 【为了防止世界被破坏，为了守护世界的和平，贯彻爱与真实的邪恶.... 请轻点喷】
 
 
 简易思路（基于发布订阅模式和数据劫持）：
 		1.通过defineProperty来监控model中的所有属性（对每一个属性都监控）
-		2.编译template生成DOM树，给所有DOM节点绑定model中对应的key（通过function来实现“dom节点和model中的key”的绑定）
-		3.修改model中属性的时候，会自动触发属性的set事件，set事件里面调用第2步中的function（该function根据最新的key的值，来操作dom重新渲染）
+		2.编译template生成DOM树，如果dom节点和model需要绑定（例如<div id="{{model.name}}"></div>）,
+		  就给这个名称为“model.name”的key绑定对应的function，funciton用于操作上面这个dom节点
+		3.修改model.name的时候，会自动触发属性的set事件，set事件里面调用第2步中的绑定function
 
 //demo start
 如何使用：new VM({data:data,template:template});//传入数据和模板即可
@@ -89,15 +90,14 @@ model ---> view绑定：
 		函数和数组说明：
 			Observer中的this.subs数组：包含了所有观察者，每个观察者的结构如下：
 				{
-					//属性名称（把属性串联起来key的值）,这个key代表model.person.age.range，
-					//model数据中的person.age.range对应的值改变的时候，就会执行actionList里面所有的函数
+					//这个key代表model.person.age.range这个属性
 					key："person.age.range"
 
 					//和key绑定的函数数组，每个函数操作一个dom节点，一个key对应多个dom节点，所以actionList是个function数组；
 					actionList：[function(){},function(){}]
 				}
 
-			monit方法【监控】：遍历model中所有的属性，每个属性用defineKey来定义属性
+			monit方法【监控】：遍历model中所有的属性，每个属性用defineKey来监控所有属性
 
 			defineKey方法：用到了Object.defineProperty来定义属性，这样属性改变的时候，就会自动执行里面的set方法
 
@@ -106,7 +106,7 @@ model ---> view绑定：
 			subscribe方法【订阅】：给model中的某个key（例如person.age.range)添加绑定的function。subscribe是在遍历dom节点的时候添加的
 
 			publish方法【发布】：根据key来执行绑定在这个key上的所有函数，比如说person.age.range这个key，它变动的时候，
-							  publish会执行绑定在person.age.range这个key上的所有function
+							  publish会执行绑定在person.age.range这个key上所有的function
 		
 
 		
@@ -208,9 +208,10 @@ model ---> view绑定：
 
 		函数说明：
 			transToFrament：把页面上的dom节点转化成文档碎片，防止dom频繁操作影响页面性能
-			travelAllNodes：遍历文档碎片节点下所有的node节点（用到了函数递归调用）
-			compileNode：编译node节点，把节点中的"{{key}}"替换成对应的值，并且给node节点执行订阅操作（Observer.prototype.subscribe）
-			bindKeyToNode：执行Observer中的subscribe【订阅】操作，（这个方法很重要）
+			travelAllNodes：遍历文档碎片节点下所有的node节点（用到了函数递归调用）,执行compileNode
+			compileNode：根据不同类型来编译node节点,例如compileTextNode，
+			compileTextNode：把节点中的"{{key}}"替换成对应的值，同时执行bindKeyToNode
+			bindKeyToNode：执行Observer中的subscribe【订阅】操作
 
 		部分源码如下：
 			var Compile = function(opts) {
@@ -251,6 +252,13 @@ model ---> view绑定：
 					} else if (this.isText(node)) {
 						this.compileTextNode(node);
 					}
+				},
+
+				//编译文本类型的node节点，里面放了对应的"{{data.name}}"这种数据格式
+				compileTextNode: function(ele) {
+					var key = this.getKey(ele.textContent);
+					this.bindKeyToNode(key, ele);
+					ele.textContent = this.compileString(ele.textContent);
 				},
 
 				//绑定key和node节点，key一旦改变，就会触发对应的函数，修改node节点
