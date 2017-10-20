@@ -207,7 +207,7 @@ Compile.prototype = {
 		return str.match(this.regExp) ? str.match(this.regExp)[1] : "";
 	},
 
-	//回去key对应的value值
+	//获取key对应的value值
 	getValueByKey: function(key) {
 		var arr = key ? key.split(".") : [];
 		var temp = this.data;
