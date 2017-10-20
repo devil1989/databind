@@ -45,8 +45,15 @@ model ---> view绑定：
 			<div title="{{des}}">
 				<div>
 					<ul id="list">
-						<li ><span >age:</span><input  type="text" name="" value="{{age}}" ><span id="age" style="float: left;">+</span></li>
-						<li><span>name:</span><input type="text" name="" value="{{name}}"></li>
+						<li >
+							<span >age:</span>
+							<input  type="text" name="" value="{{age}}" >
+							<span id="age" style="float: left;">+</span>
+						</li>
+						<li>
+							<span>name:</span>
+							<input type="text" name="" value="{{name}}">
+						</li>
 					</ul>
 				</div>
 				
@@ -86,15 +93,21 @@ model ---> view绑定：
 					//属性名称,代表model.person.age.range的值
 					key："person.age.range"
 
-					//函数数组，每一个函数表示一个dom节点和key的绑定；因为一个key（例如person.age.range）可以绑定在多个dom节点上，所以actionList需要是一个数组
+					//和key绑定的函数数组，每个函数操作一个dom节点，一个key对应多个dom节点，所以actionList是个function数组；
 					actionList：[function(){},function(){}]
 				}
 
 			monit方法【监控】：遍历object中所有的属性，每个属性用defineKey来定义属性
+
 			defineKey方法：定义属性的set方法，这样属性改变的时候，就会自动执行set方法里面的内容
+
 			defineKey里面的set方法：设置并监控新的值，并执行publish函数（publish函数会根据这个key来寻找并执行所有绑定的function）
-			subscribe方法【订阅】：给model中的某个key（例如person.age.range)添加绑定的function。这个“订阅操作”在遍历dom节点的时候执行，给每个dom节点订阅与它对应的key。
-			publish方法【发布】：根据key来执行绑定在这个key上的所有函数，比如说person.age.range这个key，它变动的时候，publish会执行绑定在person.age.range这个key上的所有function【每个function操作1个对应的dom节点】
+
+			subscribe方法【订阅】：给model中的某个key（例如person.age.range)添加绑定的function。这个“订阅操作”在遍历dom节点的时候执行，
+								给每个dom节点订阅与它对应的key。
+
+			publish方法【发布】：根据key来执行绑定在这个key上的所有函数，比如说person.age.range这个key，它变动的时候，
+							  publish会执行绑定在person.age.range这个key上的所有function【每个function操作1个对应的dom节点】
 		
 
 		
