@@ -3,7 +3,7 @@
 	定义：view和model之间的绑定
 	目的：提高开发效率，统一处理数据，便于产品维护升级等
 	备注：一般数据单向绑定即可（model ---> view绑定），数据双向绑定容易出现循环绑定问题，例如model改变导致view改变，
-	     view改变有会导致model改变，如果处理不当容易导致无限循环；处理这种循环绑定，提升了框架复杂度。
+	     view改变又会导致model改变，如果处理不当容易导致无限循环；处理这种循环绑定，提升了框架复杂度。
 
 view：视图，说白了就是html中dom节点的展示
 model：数据模型，说白了就是js中的数据对象,例如var data={persong：{sex:"",age:"",name:""},from:""}
@@ -13,14 +13,13 @@ view ---> model绑定：
 
 
 model ---> view绑定：
-	目的：修改model数据，从而让dom元素产生改变，导致页面重新渲染
-	方法：1.发布订阅模式（例如backbone.js）；2.数据劫持(vue.js)；3.脏值检查(angular.js) 
+	目的：修改model数据，导致dom元素产生改变，页面重新渲染
+	方法：1.发布订阅模式（backbone.js用到）；2.数据劫持(vue.js用到)；3.脏值检查(angular.js用到) 
 
 
 
 
-
-下面写了个简易的demo，借鉴自vue.js,用“发布订阅模式+数据劫持”实现model到view的数据单向绑定（阅读基础：需要对发布订阅者模式有所了解）
+上面的东西依照一大堆，没啥多大意义，下面写了个简易的demo，通过demo说明下，整个demo的js不超过300行，仅支持template里面的{{data}}解析绑定
 我的项目git地址：https://github.com/devil1989/databind 【为了防止世界被破坏，为了守护世界的和平，贯彻爱与真实的邪恶.... 请轻点喷】
 
 
@@ -30,7 +29,7 @@ model ---> view绑定：
 		3.修改model中属性的时候，会自动触发属性的set事件，set事件里面调用第2步中的function（该function根据最新的key的值，来操作dom重新渲染）
 
 //demo start
-使用方法：new VM({data:data,template:template});
+如何使用：new VM({data:data,template:template});//传入数据和模板即可
 	<!DOCTYPE html>
 	<html lang="en">
 	<head>
@@ -41,7 +40,7 @@ model ---> view绑定：
 	</head>
 	<body>
 		<template id="inner" type="text/template">
-			<!-- 只支持单个属性或者多个属性绑定，不支持计算 -->
+			<!-- 只支持单个属性，不支持函数计算-->
 			<div title="{{des}}">
 				<div>
 					<ul id="list">
@@ -87,24 +86,24 @@ model ---> view绑定：
 		功能: “监控model", "订阅", "发布"
 		
 		
-		函数说明：
+		函数和数组说明：
 			Observer中的this.subs数组：包含了所有观察者，每个观察者的结构如下：
 				{
-					//属性名称,代表model.person.age.range的值
+					//属性名称（把属性串联起来key的值）,这个key代表model.person.age.range，
+					//model数据中的person.age.range对应的值改变的时候，就会执行actionList里面所有的函数
 					key："person.age.range"
 
 					//和key绑定的函数数组，每个函数操作一个dom节点，一个key对应多个dom节点，所以actionList是个function数组；
 					actionList：[function(){},function(){}]
 				}
 
-			monit方法【监控】：遍历object中所有的属性，每个属性用defineKey来定义属性
+			monit方法【监控】：遍历model中所有的属性，每个属性用defineKey来定义属性
 
-			defineKey方法：定义属性的set方法，这样属性改变的时候，就会自动执行set方法里面的内容
+			defineKey方法：用到了Object.defineProperty来定义属性，这样属性改变的时候，就会自动执行里面的set方法
 
-			defineKey里面的set方法：设置并监控新的值，并执行publish函数（publish函数会根据这个key来寻找并执行所有绑定的function）
+			defineKey里面的set方法：更新并监控新的值，执行publish函数（publish函数会根据这个key来执行所有绑定的function）
 
-			subscribe方法【订阅】：给model中的某个key（例如person.age.range)添加绑定的function。这个“订阅操作”在遍历dom节点的时候执行，
-								给每个dom节点订阅与它对应的key。
+			subscribe方法【订阅】：给model中的某个key（例如person.age.range)添加绑定的function。subscribe是在遍历dom节点的时候添加的
 
 			publish方法【发布】：根据key来执行绑定在这个key上的所有函数，比如说person.age.range这个key，它变动的时候，
 							  publish会执行绑定在person.age.range这个key上的所有function
@@ -205,12 +204,12 @@ model ---> view绑定：
 
 
 	2.Compile (模板编译器)：
-		功能： “根据模板生成dom树"，"给所有绑定了model属性的dom节点添加订阅事件”
+		功能： “根据模板生成dom树"，"所有绑定了model属性的dom节点执行订阅函数（Observer.prototype.subscribe）”
 
 		函数说明：
 			transToFrament：把页面上的dom节点转化成文档碎片，防止dom频繁操作影响页面性能
 			travelAllNodes：遍历文档碎片节点下所有的node节点（用到了函数递归调用）
-			compileNode：编译node节点，把节点中的"{{key}}"替换成对应的值
+			compileNode：编译node节点，把节点中的"{{key}}"替换成对应的值，并且给node节点执行订阅操作（Observer.prototype.subscribe）
 			bindKeyToNode：执行Observer中的subscribe【订阅】操作，（这个方法很重要）
 
 		部分源码如下：
@@ -218,6 +217,7 @@ model ---> view绑定：
 				...
 			};
 			Compile.prototype = {
+				...
 
 				//把原有节点转化成Frament节点，createDocumentFragment创建文档碎片节点，不会导致页面渲染
 				transToFrament: function(el) {
@@ -280,7 +280,7 @@ model ---> view绑定：
 			}
 
 
-	3.VM：ViewModel，数据单向绑定的入口类，该类把Observer和Compile结合在一起，完成model ---> view绑定，最终生成dom树并渲染
+	3.VM：ViewModel，作为数据单向绑定的入口类，该类把Observer和Compile结合在一起，完成model ---> view绑定，最终生成dom树并渲染
 		
 
 		具体源码如下：
@@ -312,6 +312,16 @@ model ---> view绑定：
 		};
 
 
+
+	整体地梳理一遍这个demo的执行流程：
+	1.new VM({data:data,template:template}),传入的data就是model，传入的template用于生成dom树（也就是view），完成了model到view的绑定
+	2.VM.prototype.init：
+		2.1 创建数据监控对象this.observer，该对象监控data（监控以后，data的属性改变，就会执行defineProperty中的set函数，set函数里面添加了publish发布函数）
+
+		2.2 创建模板编译器对象this.compiler，该对象编译template，生成最终的dom树，并且给每个需要绑定数据的dom节点添加了subscribe订阅函数
+
+		2.3 最后，改变data里面的属性，会自动触发defineProperty中的set函数，set函数调用publish函数，publish会根据key的名称，
+		   找到对应的需要执行的函数列表，依次执行所有函数（这些函数是在2.2步中，通过subscribe添加到key上的）
 
 
 
