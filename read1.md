@@ -30,11 +30,10 @@
 	demo简易思路
 	> 1.通过defineProperty来监控model中的所有属性（对每一个属性都监控）
 	> 2.编译template生成DOM树，同时绑定dom节点和model（例如<div id="{{model.name}}"></div>）,
-			  defineProperty中已经给“model.name”绑定了对应的function，
-			  一旦model.name改变，该funciton就操作上面这个dom节点，改变view
+		defineProperty中已经给“model.name”绑定了对应的function，
+		一旦model.name改变，该funciton就操作上面这个dom节点，改变view
 	
 	demo
-
 		<!DOCTYPE html>
 		<html lang="en">
 			<head>
@@ -85,263 +84,261 @@
 		使用方法： new VM({data:数据,template:模板});
 
 
-	ViewModel依赖模块
+		### Observer
+			用到了发布订阅模式和数据监控，defineProperty用于“监控model", dom元素执行"订阅"操作，给model中
+			的属性绑定function；model中属性变化的时候，执行"发布"这个操作，执行之前绑定的那个function
 
-		Observer： 用到了发布订阅模式和数据监控，defineProperty用于“监控model", dom元素执行"订阅"操作，给model中
-				   的属性绑定function；model中属性变化的时候，执行"发布"这个操作，执行之前绑定的那个function
-
-		  部分源码如下：
-				var Observer = function(opts) {
-					this.id = (opts && opts.id) ? opts.id : +new Date();
-					this.opts = opts;
-					this.subs = []; //观察者数组
-					/*this.subs包含了所有观察者，每个观察者的结构如下：
-					{
-						key："person.age.range",//这个key代表model.person.age.range这个属性
-
-						/*
-						 和key绑定的函数数组，每个函数操作一个dom节点，
-						 一个key对应多个dom节点，所以actionList是个function数组；
-						 */
-						actionList：[function(){},function(){}]
-					}*/
-				}
-				Observer.prototype = {
-
-					//遍历model中所有的属性，每个属性用defineKey来监控所有属性
-					monit: function(data, baseUrl) {
-						var me = this;
-						baseUrl = baseUrl || "";
-						var isTypeMatch = (data && typeof data === "object");
-						if (isTypeMatch) {
-							Object.keys(data).forEach(function(key) {
-								var base = baseUrl ? (baseUrl + "." + key) : key;
-								me.defineKey(data, key, data[key], baseUrl); //定义自己
-								me.monit(data[key], base); //递归【定义的是下一层】
-							});
-						}
-					},
-
-					//用到了Object.defineProperty来定义属性，这样属性改变的时候，就会自动执行里面的set方法
-					defineKey: function(data, key, val, baseUrl) {
-						var me = this;
-						var base = baseUrl ? (baseUrl + "." + key) : key;
-
-						Object.defineProperty(data, key, {
-							enumerable: true,
-							configurable: false,
-							get: function() {
-								return val;
-							},
-
-							//更新并监控新的值，执行publish函数（publish函数会根据这个key来执行所有绑定的function）
-							set: function(newVal) {
-								if (newVal !== val) {
-									val = newVal;
-
-									//设置新值需要重新监控
-									me.monit(newVal, base); 
-
-									//(baseUrl+"."+key)作为观察者模式中的监听的那个key，也可以说是监听的那个事件
-									me.publish(base, newVal); 
-								}
-							}
-						});
-					},
-
-					/*
-					 根据key来执行绑定在这个key上的所有函数，比如说person.age.range这个key，
-					 它变动的时候，publish会执行绑定在person.age.range这个key上所有的function
-					 */
-					publish: function(key, newVal) {
-						(this.subs || []).forEach(function(sub) {
-							if (sub.key == key) {
-								(sub.actionList || []).forEach(function(action) {
-									action(newVal);
-								});
-							}
-						});
-					},
-
-					//给model中的某个key（例如person.age.range)添加绑定的function 
-					subscribe: function(key, callback) {
-						var tgIdx;
-						var hasExist = this.subs.some(function(unit, idx) {
-							tgIdx = (unit.key === key) ? idx : -1;
-							return (unit.key === key)
-						});
-						if (hasExist) {
-							if (Object.prototype.toString.call(this.subs[tgIdx].actionList) === "[object Array]") {
-								this.subs[tgIdx].actionList.push(callback);
-							} else {
-								this.subs[tgIdx].actionList = [callback];
-							}
-						} else {
-							this.subs.push({
-								key: key,
-								actionList: [callback]
-							});
-						}
-					},
-
-					//取消订阅
-					remove: function(key) {
-						var removeIdx;
-						this.subs.forEach(function(sub, idx) {
-							removeIdx = sub.key === key ? idx : -1;
-							return sub.key === key
-						});
-						if (removeIdx !== -1) {
-							this.subs.splice(removeIdx, 1);
-						}
-					},
-
-					isObject: function(data) {
-						return data && typeof data === "object"
-					}
-				};
-
-
-
-		Compile： 模板编译器
-
-			var Compile = function(opts) {
-				this.opts = opts;
-				this.data = this.opts.data;
-				this.observer = this.opts.observer;
-				this.regExp = /\{\{([\s\S]*)\}\}/;
-				this.ele = document.createElement("div");
-				this.ele.innerHTML = opts.template; //渲染页面
-				this.fragment = this.transToFrament(this.ele);
-				this.travelAllNodes(this.fragment);
-				this.ele.appendChild(this.fragment);
-			};
-			Compile.prototype = {
-
-				//把页面上的dom节点转化成文档碎片，防止dom频繁操作影响页面性能
-				transToFrament: function(el) {
-					var fragment = document.createDocumentFragment(),
-						child;
-					// 将原生节点拷贝到fragment
-					while (child = el.firstChild) {
-						fragment.appendChild(child);
-					}
-					return fragment;
-				},
-
-				//遍历文档碎片节点下所有的node节点（用到了函数递归调用）,执行compileNode
-				travelAllNodes: function(ele) {
-					this.compileNode(ele);
-					([].slice.call(ele.childNodes) || []).forEach(function(node) {
-						this.compileNode(node);
-						if (node.childNodes && node.childNodes.length) {
-							this.travelAllNodes(node);
-						}
-					}.bind(this));
-				},
-
-				/*包含功能
-				 1.渲染node节点
-				 2.给key设置callback函数，函数内操作node节点
-				 */
-				compileNode: function(node) {
-					if (this.isElement(node)) {
-						this.compileElementNode(node);
-					} else if (this.isText(node)) {
-						this.compileTextNode(node);
-					}
-				},
+	  	源码如下：
+		var Observer = function(opts) {
+			this.id = (opts && opts.id) ? opts.id : +new Date();
+			this.opts = opts;
+			this.subs = []; //观察者数组
+			/*this.subs包含了所有观察者，每个观察者的结构如下：
+			{
+				key："person.age.range",//这个key代表model.person.age.range这个属性
 
 				/*
-				  编译element类型的node节点,
-				  需要处理属性绑定v-bind="{{data.name}}"和
-				  事件v-event="{{data.event}}"
+				 和key绑定的函数数组，每个函数操作一个dom节点，
+				 一个key对应多个dom节点，所以actionList是个function数组；
 				 */
-				compileElementNode: function(node) {
-					var me = this,
-						nodeAttrs = node.attributes;
-					[].slice.call(nodeAttrs).forEach(function(attr) {
-						var attrName = attr.name;
-						var attrValue = attr.value;
-						var key = me.getKey(attrValue);
-						me.bindKeyToNode(key, attr);
-						attr.value = me.compileString(attrValue); //渲染node
+				actionList：[function(){},function(){}]
+			}*/
+		}
+		Observer.prototype = {
+
+			//遍历model中所有的属性，每个属性用defineKey来监控所有属性
+			monit: function(data, baseUrl) {
+				var me = this;
+				baseUrl = baseUrl || "";
+				var isTypeMatch = (data && typeof data === "object");
+				if (isTypeMatch) {
+					Object.keys(data).forEach(function(key) {
+						var base = baseUrl ? (baseUrl + "." + key) : key;
+						me.defineKey(data, key, data[key], baseUrl); //定义自己
+						me.monit(data[key], base); //递归【定义的是下一层】
 					});
-				},
+				}
+			},
 
-				//编译文本类型的node节点，里面放了对应的"{{data.name}}"这种数据格式
-				compileTextNode: function(ele) {
-					var key = this.getKey(ele.textContent);
-					this.bindKeyToNode(key, ele);
-					ele.textContent = this.compileString(ele.textContent);
-				},
+			//用到了Object.defineProperty来定义属性，这样属性改变的时候，就会自动执行里面的set方法
+			defineKey: function(data, key, val, baseUrl) {
+				var me = this;
+				var base = baseUrl ? (baseUrl + "." + key) : key;
 
-				//解析“{{}}”，把它变成对应的数据值
-				compileString: function(str) {
-					var key = this.getKey(str);
-					return str.replace(this.regExp, this.getValueByKey(key));
-				},
+				Object.defineProperty(data, key, {
+					enumerable: true,
+					configurable: false,
+					get: function() {
+						return val;
+					},
 
-				//绑定key和node节点，key一旦改变，就会触发对应的函数，修改node节点
-				bindKeyToNode: function(key, node) {
-					if (!!key.trim()) {
-						console.log(key);
-						var nodeType = node.nodeType;
-						var regExp = new RegExp("\\{\\{" + key + "\\}\\}");
-						var originTextConetnt;
-						if (nodeType === 2) {
-							originTextConetnt = node.value;
-						} else if (nodeType === 3) {
-							originTextConetnt = node.textContent;
+					//更新并监控新的值，执行publish函数（publish函数会根据这个key来执行所有绑定的function）
+					set: function(newVal) {
+						if (newVal !== val) {
+							val = newVal;
+
+							//设置新值需要重新监控
+							me.monit(newVal, base); 
+
+							//(baseUrl+"."+key)作为观察者模式中的监听的那个key，也可以说是监听的那个事件
+							me.publish(base, newVal); 
 						}
+					}
+				});
+			},
 
-						this.observer.subscribe(key, function(newVal) {
-							var tgValue = originTextConetnt.replace(regExp, newVal);
-							if (nodeType === 2) {
-								node.value = tgValue;
-							} else if (nodeType === 3) {
-								node.textContent = tgValue;
-							}
+			/*
+			 根据key来执行绑定在这个key上的所有函数，比如说person.age.range这个key，
+			 它变动的时候，publish会执行绑定在person.age.range这个key上所有的function
+			 */
+			publish: function(key, newVal) {
+				(this.subs || []).forEach(function(sub) {
+					if (sub.key == key) {
+						(sub.actionList || []).forEach(function(action) {
+							action(newVal);
 						});
 					}
-				},
+				});
+			},
 
-				//从{{name.age.sex}}中获取name.age.sex
-				getKey: function(str) {
-					return str.match(this.regExp) ? str.match(this.regExp)[1] : "";
-				},
-
-				//获取key对应的value值
-				getValueByKey: function(key) {
-					var arr = key ? key.split(".") : [];
-					var temp = this.data;
-					for (var i = 0; i < arr.length; i++) {
-						if (temp) {
-							temp = temp[arr[i]];
-						} else {
-							temp = undefined;
-							break
-						}
+			//给model中的某个key（例如person.age.range)添加绑定的function 
+			subscribe: function(key, callback) {
+				var tgIdx;
+				var hasExist = this.subs.some(function(unit, idx) {
+					tgIdx = (unit.key === key) ? idx : -1;
+					return (unit.key === key)
+				});
+				if (hasExist) {
+					if (Object.prototype.toString.call(this.subs[tgIdx].actionList) === "[object Array]") {
+						this.subs[tgIdx].actionList.push(callback);
+					} else {
+						this.subs[tgIdx].actionList = [callback];
 					}
-					return temp;
-				},
-
-
-				isElement: function(ele) {
-					return ele.nodeType === 1 ? true : false;
-				},
-				isText: function(ele) {
-					return ele.nodeType === 3 ? true : false;
-				},
-				getElement: function() {
-					return this.ele;
+				} else {
+					this.subs.push({
+						key: key,
+						actionList: [callback]
+					});
 				}
+			},
+
+			//取消订阅
+			remove: function(key) {
+				var removeIdx;
+				this.subs.forEach(function(sub, idx) {
+					removeIdx = sub.key === key ? idx : -1;
+					return sub.key === key
+				});
+				if (removeIdx !== -1) {
+					this.subs.splice(removeIdx, 1);
+				}
+			},
+
+			isObject: function(data) {
+				return data && typeof data === "object"
 			}
+		};
+
+
+
+		### Compile： 模板编译器
+		var Compile = function(opts) {
+			this.opts = opts;
+			this.data = this.opts.data;
+			this.observer = this.opts.observer;
+			this.regExp = /\{\{([\s\S]*)\}\}/;
+			this.ele = document.createElement("div");
+			this.ele.innerHTML = opts.template; //渲染页面
+			this.fragment = this.transToFrament(this.ele);
+			this.travelAllNodes(this.fragment);
+			this.ele.appendChild(this.fragment);
+		};
+		Compile.prototype = {
+
+			//把页面上的dom节点转化成文档碎片，防止dom频繁操作影响页面性能
+			transToFrament: function(el) {
+				var fragment = document.createDocumentFragment(),
+					child;
+				// 将原生节点拷贝到fragment
+				while (child = el.firstChild) {
+					fragment.appendChild(child);
+				}
+				return fragment;
+			},
+
+			//遍历文档碎片节点下所有的node节点（用到了函数递归调用）,执行compileNode
+			travelAllNodes: function(ele) {
+				this.compileNode(ele);
+				([].slice.call(ele.childNodes) || []).forEach(function(node) {
+					this.compileNode(node);
+					if (node.childNodes && node.childNodes.length) {
+						this.travelAllNodes(node);
+					}
+				}.bind(this));
+			},
+
+			/*包含功能
+			 1.渲染node节点
+			 2.给key设置callback函数，函数内操作node节点
+			 */
+			compileNode: function(node) {
+				if (this.isElement(node)) {
+					this.compileElementNode(node);
+				} else if (this.isText(node)) {
+					this.compileTextNode(node);
+				}
+			},
+
+			/*
+			  编译element类型的node节点,
+			  需要处理属性绑定v-bind="{{data.name}}"和
+			  事件v-event="{{data.event}}"
+			 */
+			compileElementNode: function(node) {
+				var me = this,
+					nodeAttrs = node.attributes;
+				[].slice.call(nodeAttrs).forEach(function(attr) {
+					var attrName = attr.name;
+					var attrValue = attr.value;
+					var key = me.getKey(attrValue);
+					me.bindKeyToNode(key, attr);
+					attr.value = me.compileString(attrValue); //渲染node
+				});
+			},
+
+			//编译文本类型的node节点，里面放了对应的"{{data.name}}"这种数据格式
+			compileTextNode: function(ele) {
+				var key = this.getKey(ele.textContent);
+				this.bindKeyToNode(key, ele);
+				ele.textContent = this.compileString(ele.textContent);
+			},
+
+			//解析“{{}}”，把它变成对应的数据值
+			compileString: function(str) {
+				var key = this.getKey(str);
+				return str.replace(this.regExp, this.getValueByKey(key));
+			},
+
+			//绑定key和node节点，key一旦改变，就会触发对应的函数，修改node节点
+			bindKeyToNode: function(key, node) {
+				if (!!key.trim()) {
+					console.log(key);
+					var nodeType = node.nodeType;
+					var regExp = new RegExp("\\{\\{" + key + "\\}\\}");
+					var originTextConetnt;
+					if (nodeType === 2) {
+						originTextConetnt = node.value;
+					} else if (nodeType === 3) {
+						originTextConetnt = node.textContent;
+					}
+
+					this.observer.subscribe(key, function(newVal) {
+						var tgValue = originTextConetnt.replace(regExp, newVal);
+						if (nodeType === 2) {
+							node.value = tgValue;
+						} else if (nodeType === 3) {
+							node.textContent = tgValue;
+						}
+					});
+				}
+			},
+
+			//从{{name.age.sex}}中获取name.age.sex
+			getKey: function(str) {
+				return str.match(this.regExp) ? str.match(this.regExp)[1] : "";
+			},
+
+			//获取key对应的value值
+			getValueByKey: function(key) {
+				var arr = key ? key.split(".") : [];
+				var temp = this.data;
+				for (var i = 0; i < arr.length; i++) {
+					if (temp) {
+						temp = temp[arr[i]];
+					} else {
+						temp = undefined;
+						break
+					}
+				}
+				return temp;
+			},
+
+
+			isElement: function(ele) {
+				return ele.nodeType === 1 ? true : false;
+			},
+			isText: function(ele) {
+				return ele.nodeType === 3 ? true : false;
+			},
+			getElement: function() {
+				return this.ele;
+			}
+		}
 
 
 
 
-	ViewModel实现源码
+		### ViewModel实现源码
 		var ViewModel = function(opts) {
 			this.opts = opts;
 			this.data = opts.data;
