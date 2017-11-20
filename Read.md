@@ -1,4 +1,4 @@
-# vm框架数据绑定讲解
+# 如何实现VM框架中的数据绑定
 
 ## 一：数据绑定概述
 	视图（view）和数据（model）之间的绑定
@@ -368,8 +368,8 @@
 		
 		
 # 总结
-	new ViewModel({data:data,template:template}),传入的data就是model，传入的template用于生成dom树（也就是view）
-	完成了model到view的绑定,ViewModel内部大致执行顺序是：
+	简单地调用new ViewModel({data:data,template:template})，
+	完成了model和view的绑定,ViewModel内部大致执行顺序是：
 
 	1. 创建数据监控对象this.observer，该对象监控data（监控以后，data的属性改变，
 	   就会执行defineProperty中的set函数，set函数里面添加了publish发布函数）
@@ -380,9 +380,10 @@
 	3. 最后，改变data里面的属性，会自动触发defineProperty中的set函数，set函数调用publish函数，
 	   publish会根据key的名称，找到对应的需要执行的函数列表，依次执行所有函数
 	
-
+	
+	感谢阅读!!
 
 
 		
-# git地址
+# Git地址
   https://github.com/devil1989/databind/
