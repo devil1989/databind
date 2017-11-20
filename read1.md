@@ -25,13 +25,13 @@
 
 ## 六：model > view数据绑定demo讲解 （如何实现数据改变，导致UI界面重新渲染）
 
-	### demo简易思路（基于发布订阅模式和数据劫持）：
+	### demo简易思路
 			1.通过defineProperty来监控model中的所有属性（对每一个属性都监控）
 			2.编译template生成DOM树，同时绑定dom节点和model（例如<div id="{{model.name}}"></div>）,
 			  defineProperty中已经给“model.name”绑定了对应的function，
 			  一旦model.name改变，该funciton就操作上面这个dom节点，改变view
 	
-	### demo如下：
+	### demo
 
 		<!DOCTYPE html>
 		<html lang="en">
@@ -83,9 +83,9 @@
 		使用方法： new VM({data:数据,template:模板});
 
 
-	### ViewModel依赖模块：Observer和Compile
+	### ViewModel依赖模块
 
-		#### 1.Observer： 
+		#### Observer： 
 		  用到了发布订阅模式和数据监控，defineProperty用于“监控model", dom元素执行"订阅"操作，给model中的属性绑定function；
 					 model中属性变化的时候，执行"发布"这个操作，执行之前绑定的那个function
 
@@ -199,7 +199,7 @@
 
 
 
-		#### 2.Compile： 模板编译器
+		#### Compile： 模板编译器
 
 			var Compile = function(opts) {
 				this.opts = opts;
@@ -333,7 +333,7 @@
 
 
 
-	### ViewModel实现源码：
+	### ViewModel实现源码
 		var ViewModel = function(opts) {
 			this.opts = opts;
 			this.data = opts.data;
