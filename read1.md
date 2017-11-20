@@ -84,7 +84,7 @@
 		使用方法： new VM({data:数据,template:模板});
 
 
-		### Observer
+		Observer
 			用到了发布订阅模式和数据监控，defineProperty用于“监控model", dom元素执行"订阅"操作，给model中
 			的属性绑定function；model中属性变化的时候，执行"发布"这个操作，执行之前绑定的那个function
 
@@ -201,7 +201,7 @@
 
 
 
-		### Compile： 模板编译器
+		Compile： 模板编译器
 		var Compile = function(opts) {
 			this.opts = opts;
 			this.data = this.opts.data;
@@ -338,7 +338,7 @@
 
 
 
-		### ViewModel实现源码
+		ViewModel实现源码
 		var ViewModel = function(opts) {
 			this.opts = opts;
 			this.data = opts.data;
