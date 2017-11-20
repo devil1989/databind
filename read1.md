@@ -7,8 +7,8 @@
 	不用手动调用方法渲染视图，提高开发效率；统一处理数据，便于维护
 
 ## 三：数据绑定中的元素
-	### 视图（view）：说白了就是html中dom元素的展示
-	### 数据（model）：浏览器中的数据，localStorage , sessionStorage , js中的object等
+	视图（view）：说白了就是html中dom元素的展示
+	数据（model）：浏览器中的数据，localStorage , sessionStorage , js中的object等
 
 ## 四：数据绑定分类
 	view > model的数据绑定：view改变，导致model改变
@@ -70,7 +70,7 @@
 						var vm=new VM({
 							data:data,
 							template:document.getElementById("inner").innerHTML
-							// wrapper:document.body//可以指定对应容器，也可以不指定容器，直接获取元素，再手动插入对应dom元素
+							// wrapper:document.body//可以指定对应容器，也可以不指定容器
 						});
 						document.body.appendChild(vm.get());
 
@@ -87,9 +87,8 @@
 
 	ViewModel依赖模块
 
-		Observer： 
-		  用到了发布订阅模式和数据监控，defineProperty用于“监控model", dom元素执行"订阅"操作，给model中的属性绑定function；
-					 model中属性变化的时候，执行"发布"这个操作，执行之前绑定的那个function
+		Observer： 用到了发布订阅模式和数据监控，defineProperty用于“监控model", dom元素执行"订阅"操作，给model中
+				   的属性绑定function；model中属性变化的时候，执行"发布"这个操作，执行之前绑定的那个function
 
 		  部分源码如下：
 				var Observer = function(opts) {
@@ -100,7 +99,10 @@
 					{
 						key："person.age.range",//这个key代表model.person.age.range这个属性
 
-						//和key绑定的函数数组，每个函数操作一个dom节点，一个key对应多个dom节点，所以actionList是个function数组；
+						/*
+						 和key绑定的函数数组，每个函数操作一个dom节点，
+						 一个key对应多个dom节点，所以actionList是个function数组；
+						 */
 						actionList：[function(){},function(){}]
 					}*/
 				}
@@ -148,8 +150,8 @@
 					},
 
 					/*
-					 @description：根据key来执行绑定在这个key上的所有函数，比如说person.age.range这个key，它变动的时候，
-					 			   publish会执行绑定在person.age.range这个key上所有的function
+					 根据key来执行绑定在这个key上的所有函数，比如说person.age.range这个key，
+					 它变动的时候，publish会执行绑定在person.age.range这个key上所有的function
 					 */
 					publish: function(key, newVal) {
 						(this.subs || []).forEach(function(sub) {
@@ -161,7 +163,7 @@
 						});
 					},
 
-					//给model中的某个key（例如person.age.range)添加绑定的function ； subscribe是在遍历dom节点的时候添加的
+					//给model中的某个key（例如person.age.range)添加绑定的function 
 					subscribe: function(key, callback) {
 						var tgIdx;
 						var hasExist = this.subs.some(function(unit, idx) {
@@ -250,7 +252,11 @@
 					}
 				},
 
-				//编译element类型的node节点,需要处理属性绑定v-bind="{{data.name}}"和事件v-event="{{data.event}}"
+				/*
+				  编译element类型的node节点,
+				  需要处理属性绑定v-bind="{{data.name}}"和
+				  事件v-event="{{data.event}}"
+				 */
 				compileElementNode: function(node) {
 					var me = this,
 						nodeAttrs = node.attributes;
@@ -365,23 +371,21 @@
 		
 		
 # 总结
-	一个VM框架简单的单项数据绑定，就是上面的ViewMidel，Observer，Compile，大致流程如下
+	new ViewModel({data:data,template:template}),传入的data就是model，传入的template用于生成dom树（也就是view）
+	完成了model到view的绑定,ViewModel内部大致执行顺序是：
 
-    new ViewModel({data:data,template:template}),传入的data就是model，传入的template用于生成dom树（也就是view），完成了model到view的绑定,
-    ViewModel内部大致执行顺序是：
-    	<ul>
-    		<li>1. 创建数据监控对象this.observer，该对象监控data（监控以后，data的属性改变，就会执行defineProperty中的set函数，set函数里面添加了publish发布函数）</li>
-    		<li>2. 创建模板编译器对象this.compiler，该对象编译template，生成最终的dom树，并且给每个需要绑定数据的dom节点添加了subscribe订阅函数</li>
-    		<li>3. 最后，改变data里面的属性，会自动触发defineProperty中的set函数，set函数调用publish函数，publish会根据key的名称，找到对应的需要执行的函数列表，依次执行所有函数</li>
-    	</ul>
-		
+	1. 创建数据监控对象this.observer，该对象监控data（监控以后，data的属性改变，
+	   就会执行defineProperty中的set函数，set函数里面添加了publish发布函数）
 
-		
+	2. 创建模板编译器对象this.compiler，该对象编译template，生成最终的dom树，
+	   并且给每个需要绑定数据的dom节点添加了subscribe订阅函数
 
-		
-		   
+	3. 最后，改变data里面的属性，会自动触发defineProperty中的set函数，set函数调用publish函数，
+	   publish会根据key的名称，找到对应的需要执行的函数列表，依次执行所有函数
+	
+
 
 
 		
-# demo的git地址
+# git地址
   https://github.com/devil1989/databind/
