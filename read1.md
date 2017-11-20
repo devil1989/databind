@@ -132,7 +132,7 @@
 						return val;
 					},
 
-					//更新并监控新的值，执行publish函数（publish函数会根据这个key来执行所有绑定的function）
+					//更新并监控新的值，执行publish函数
 					set: function(newVal) {
 						if (newVal !== val) {
 							val = newVal;
@@ -169,7 +169,7 @@
 					return (unit.key === key)
 				});
 				if (hasExist) {
-					if (Object.prototype.toString.call(this.subs[tgIdx].actionList) === "[object Array]") {
+					if (Object.prototype.toString.call(this.subs[tgIdx].actionList)=="[object Array]"){
 						this.subs[tgIdx].actionList.push(callback);
 					} else {
 						this.subs[tgIdx].actionList = [callback];
