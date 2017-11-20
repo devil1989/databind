@@ -1,18 +1,18 @@
-#vm框架数据绑定讲解
+# vm框架数据绑定讲解
 
-##一：数据绑定概述：视图（view）和数据（model）之间的绑定
+## 一：数据绑定概述：视图（view）和数据（model）之间的绑定
 
-##二：数据绑定目的：不用手动调用方法渲染视图，提高开发效率；统一处理数据，便于维护
+## 二：数据绑定目的：不用手动调用方法渲染视图，提高开发效率；统一处理数据，便于维护
 
-##三：数据绑定中的元素：
+## 三：数据绑定中的元素：
 	3.1 视图（view）：说白了就是html中dom元素的展示
 	3.2 数据（model）：浏览器中的数据，localStorage , sessionStorage , js中的object等
 
-##四：数据绑定分类：
+## 四：数据绑定分类：
 	4.1 view > model的数据绑定：view改变，导致model改变
 	4.2 model > view的数据绑定：model改变，导致view改变
 
-##五：数据绑定实现方法：
+## 五：数据绑定实现方法：
 	5.1 view > model的数据绑定实现方法：
 			修改dom元素（input,textarea,select）的数据，导致model产生变化，
 			只要给dom元素绑定change事件，触发事件的时候修改model即可，不细讲
@@ -23,15 +23,15 @@
 			3.脏值检查(angular.js用到)；
 
 
-##六：model > view数据绑定demo讲解 （如何实现数据改变，导致UI界面重新渲染）
+## 六：model > view数据绑定demo讲解 （如何实现数据改变，导致UI界面重新渲染）
 
-	###6.1 demo简易思路（基于发布订阅模式和数据劫持）：
+	### 6.1 demo简易思路（基于发布订阅模式和数据劫持）：
 			1.通过defineProperty来监控model中的所有属性（对每一个属性都监控）
 			2.编译template生成DOM树，同时绑定dom节点和model（例如<div id="{{model.name}}"></div>）,
 			  defineProperty中已经给“model.name”绑定了对应的function，
 			  一旦model.name改变，该funciton就操作上面这个dom节点，改变view
 	
-	###6.2 demo如下：
+	### 6.2 demo如下：
 
 		<!DOCTYPE html>
 		<html lang="en">
@@ -83,9 +83,9 @@
 		使用方法： new VM({data:数据,template:模板});
 
 
-	###6.3 ViewModel依赖模块：Observer和Compile
+	### 6.3 ViewModel依赖模块：Observer和Compile
 
-		####1.Observer： 
+		#### 1.Observer： 
 		  用到了发布订阅模式和数据监控，defineProperty用于“监控model", dom元素执行"订阅"操作，给model中的属性绑定function；
 					 model中属性变化的时候，执行"发布"这个操作，执行之前绑定的那个function
 
@@ -199,7 +199,7 @@
 
 
 
-		####2.Compile： 模板编译器
+		#### 2.Compile： 模板编译器
 
 			var Compile = function(opts) {
 				this.opts = opts;
@@ -333,7 +333,7 @@
 
 
 
-	###6.4 ViewModel实现源码：
+	### 6.4 ViewModel实现源码：
 		var ViewModel = function(opts) {
 			this.opts = opts;
 			this.data = opts.data;
@@ -362,7 +362,7 @@
 		};
 		
 		
-#总结：
+# 总结：
 	一个VM框架简单的单项数据绑定，就是上面的ViewMidel，Observer，Compile，大致流程如下
 
     new ViewModel({data:data,template:template}),传入的data就是model，传入的template用于生成dom树（也就是view），完成了model到view的绑定,
@@ -376,4 +376,5 @@
 
 
 		
-			
+# demo的git地址
+  https://github.com/devil1989/databind/
