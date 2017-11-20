@@ -27,7 +27,7 @@
 
 ## 六：model > view数据绑定demo讲解 （如何实现数据改变，导致UI界面重新渲染）
 
-	demo简易思路
+	demo简易思路 
 	> 1.通过defineProperty来监控model中的所有属性（对每一个属性都监控）
 	> 2.编译template生成DOM树，同时绑定dom节点和model（例如<div id="{{model.name}}"></div>）,
 		defineProperty中已经给“model.name”绑定了对应的function，
