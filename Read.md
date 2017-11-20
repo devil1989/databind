@@ -8,7 +8,7 @@
 
 ## 三：数据绑定中的元素
 	视图（view）：说白了就是html中dom元素的展示
-	数据（model）：浏览器中的数据，localStorage , sessionStorage , js中的object等
+	数据（model）：用于保存数据的引用类型
 
 ## 四：数据绑定分类
 	view > model的数据绑定：view改变，导致model改变
