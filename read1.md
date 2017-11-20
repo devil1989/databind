@@ -369,12 +369,17 @@
 
     new ViewModel({data:data,template:template}),传入的data就是model，传入的template用于生成dom树（也就是view），完成了model到view的绑定,
     ViewModel内部大致执行顺序是：
-		1. 创建数据监控对象this.observer，该对象监控data（监控以后，data的属性改变，就会执行defineProperty中的set函数，set函数里面添加了publish发布函数）
+    	<ul>
+    		<li>1. 创建数据监控对象this.observer，该对象监控data（监控以后，data的属性改变，就会执行defineProperty中的set函数，set函数里面添加了publish发布函数）</li>
+    		<li>2. 创建模板编译器对象this.compiler，该对象编译template，生成最终的dom树，并且给每个需要绑定数据的dom节点添加了subscribe订阅函数</li>
+    		<li>3. 最后，改变data里面的属性，会自动触发defineProperty中的set函数，set函数调用publish函数，publish会根据key的名称，找到对应的需要执行的函数列表，依次执行所有函数</li>
+    	</ul>
+		
 
-		2. 创建模板编译器对象this.compiler，该对象编译template，生成最终的dom树，并且给每个需要绑定数据的dom节点添加了subscribe订阅函数
+		
 
-		3. 最后，改变data里面的属性，会自动触发defineProperty中的set函数，set函数调用publish函数，publish会根据key的名称，
-		   找到对应的需要执行的函数列表，依次执行所有函数（这些函数是在2.2步中，通过subscribe添加到key上的）
+		
+		   
 
 
 		
