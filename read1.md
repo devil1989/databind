@@ -15,11 +15,11 @@
 	model > view的数据绑定：model改变，导致view改变
 
 ## 五：数据绑定实现方法
-	<strong>view > model的数据绑定实现方法</strong>
+	__view > model的数据绑定实现方法__
 			修改dom元素（input,textarea,select）的数据，导致model产生变化，
 			只要给dom元素绑定change事件，触发事件的时候修改model即可，不细讲
 
-	<strong>model > view的数据绑定实现方法</strong>
+	__model > view的数据绑定实现方法__
 			1.发布订阅模式（backbone.js用到）；
 			2.数据劫持(vue.js用到)；
 			3.脏值检查(angular.js用到)；
@@ -27,13 +27,13 @@
 
 ## 六：model > view数据绑定demo讲解 （如何实现数据改变，导致UI界面重新渲染）
 
-	<strong>demo简易思路</strong>
+	__demo简易思路__
 	> 1.通过defineProperty来监控model中的所有属性（对每一个属性都监控）
 	> 2.编译template生成DOM树，同时绑定dom节点和model（例如<div id="{{model.name}}"></div>）,
 			  defineProperty中已经给“model.name”绑定了对应的function，
 			  一旦model.name改变，该funciton就操作上面这个dom节点，改变view
 	
-	<strong>demo</strong>
+	__demo__
 
 		<!DOCTYPE html>
 		<html lang="en">
@@ -85,7 +85,7 @@
 		使用方法： new VM({data:数据,template:模板});
 
 
-	<strong>ViewModel依赖模块</strong>
+	__ViewModel依赖模块__
 
 		Observer： 
 		  用到了发布订阅模式和数据监控，defineProperty用于“监控model", dom元素执行"订阅"操作，给model中的属性绑定function；
@@ -335,7 +335,7 @@
 
 
 
-	<strong>ViewModel实现源码</strong>
+	__ViewModel实现源码__
 		var ViewModel = function(opts) {
 			this.opts = opts;
 			this.data = opts.data;
