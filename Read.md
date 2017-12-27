@@ -334,7 +334,7 @@
 	
 
 #demo
-    (Git地址:https://github.com/devil1989/databind/,把代码拉下来，在浏览器中打开demo.html即可,demo.html文件内容如下)
+
 		<!DOCTYPE html>
 		<html lang="en">
 		<head>
@@ -388,6 +388,8 @@
 			</script>
 		</body>
 		</html>
-		
+
+#Git地址
+	https://github.com/devil1989/databind/
 
 	感谢阅读!!
