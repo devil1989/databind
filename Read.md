@@ -345,13 +345,16 @@
 		</head>
 		<body>
 			<template id="inner" type="text/template">
-				<!-- 只支持单个属性，不支持计算，也不支持数组元素的添加删除监控，这个需要额外增加功能来实现，这个demo只是简单介绍大致原理 -->
+				<!-- 只支持单个属性，不支持计算，也不支持数组元素的添加删除监控
+				，这个需要额外增加功能来实现，这个demo只是简单介绍大致原理 -->
 				<ul>
 					<li>
-						<span>点击下面+，触发的事件只是修改了数据的值，对应的html就会自动重新渲染</span>
+						<span>点击下面+，触发的事件只是修改了数据的值，
+						对应的html就会自动重新渲染</span>
 					</li>
 					<li>
-						<span>修改input元素里面的值，触发的事件只是修改了对应的数据，html就会自动重新渲染</span>
+						<span>修改input元素里面的值，触发的事件只是修改了
+						对应的数据，html就会自动重新渲染</span>
 					</li>
 				</ul>
 				
@@ -359,8 +362,15 @@
 				<div title="{{des}}">
 					<div>
 						<ul id="list">
-							<li ><span >age:</span><input  type="text" name="" value="{{age}}" ><span id="age" style="float: left;">+</span></li>
-							<li><span>name:</span><input id="firstName" type="text" name="" value="{{name}}"></li>
+							<li >
+								<span >age:</span>
+								<input  type="text" name="" value="{{age}}" >
+								<span id="age" style="float: left;">+</span>
+							</li>
+							<li>
+								<span>name:</span>
+								<input id="firstName" type="text" name="" value="{{name}}">
+							</li>
 							<li><span>{{name}}</span></li>
 						</ul>
 					</div>
@@ -373,7 +383,8 @@
 					var vm=new VM({
 						data:data,
 						template:document.getElementById("inner").innerHTML
-						// wrapper:document.body//可以指定对应容器，也可以不指定容器，直接获取元素，再手动插入对应dom元素
+						/* wrapper:document.body//可以指定对应容器，也可以不指定容器，
+						直接获取元素，再手动插入对应dom元素*/
 					});
 					document.body.appendChild(vm.get());
 
