@@ -27,61 +27,11 @@
 
 ## 六：model > view数据绑定demo讲解 （如何实现数据改变，导致UI界面重新渲染）
 
-	demo简易思路 
+	简易思路 
 	> 1.通过defineProperty来监控model中的所有属性（对每一个属性都监控）
 	> 2.编译template生成DOM树，同时绑定dom节点和model（例如<div id="{{model.name}}"></div>）,
 		defineProperty中已经给“model.name”绑定了对应的function，
 		一旦model.name改变，该funciton就操作上面这个dom节点，改变view
-	
-	demo使用方法
-		<!DOCTYPE html>
-		<html lang="en">
-			<head>
-				<meta charset="UTF-8">
-				<title>Document</title>
-				<link rel="stylesheet" type="text/css" href="demo.css">
-				<script type="text/javascript" src="./observe.js"></script>
-			</head>
-			<body>
-				<template id="inner" type="text/template">
-					<!-- 只支持单个属性，不支持函数计算-->
-					<div title="{{des}}">
-						<div>
-							<ul id="list">
-								<li >
-									<span >age:</span>
-									<input  type="text" name="" value="{{age}}" >
-									<span id="age" style="float: left;">+</span>
-								</li>
-								<li>
-									<span>name:</span>
-									<input type="text" name="" value="{{name}}">
-								</li>
-							</ul>
-						</div>
-						
-					</div>
-				</template>
-
-				<script type="text/javascript">
-					(function(){
-						window.data={name:"jeffrey",age:28,des:"测试"};
-						var vm=new VM({
-							data:data,
-							template:document.getElementById("inner").innerHTML
-							// wrapper:document.body//可以指定对应容器，也可以不指定容器
-						});
-						document.body.appendChild(vm.get());
-
-						document.getElementById("age").addEventListener("click",function(){
-							data.age++;
-						});
-					})();
-				</script>
-			</body>
-		</html>
-
-		使用方法： new VM({data:数据,template:模板});
 	
 	
 	主要js模块：Observer,Compile,ViewModel
@@ -382,10 +332,62 @@
 	3. 最后，改变data里面的属性，会自动触发defineProperty中的set函数，set函数调用publish函数，
 	   publish会根据key的名称，找到对应的需要执行的函数列表，依次执行所有函数
 	
-	
-	感谢阅读!!
+	4. 使用方法： new VM({data:数据,template:模板});
 
+	5. demo:(Git地址:https://github.com/devil1989/databind/,只要把代码pull下来，在浏览器中打开demo.html即可,demo.html文件内容如下)
+		<!DOCTYPE html>
+		<html lang="en">
+		<head>
+			<meta charset="UTF-8">
+			<title>Document</title>
+			<link rel="stylesheet" type="text/css" href="demo.css">
+			<script type="text/javascript" src="./observe.js"></script>
+		</head>
+		<body>
+			<template id="inner" type="text/template">
+				<!-- 只支持单个属性，不支持计算，也不支持数组元素的添加删除监控，这个需要额外增加功能来实现，这个demo只是简单介绍大致原理 -->
+				<ul>
+					<li>
+						<span>点击下面+，触发的事件只是修改了数据的值，对应的html就会自动重新渲染</span>
+					</li>
+					<li>
+						<span>修改input元素里面的值，触发的事件只是修改了对应的数据，html就会自动重新渲染</span>
+					</li>
+				</ul>
+				
+				
+				<div title="{{des}}">
+					<div>
+						<ul id="list">
+							<li ><span >age:</span><input  type="text" name="" value="{{age}}" ><span id="age" style="float: left;">+</span></li>
+							<li><span>name:</span><input id="firstName" type="text" name="" value="{{name}}"></li>
+							<li><span>{{name}}</span></li>
+						</ul>
+					</div>
+					
+				</div>
+			</template>
+			<script type="text/javascript">
+				(function(){
+					window.data={name:"jeffrey",age:28,des:"测试"};
+					var vm=new VM({
+						data:data,
+						template:document.getElementById("inner").innerHTML
+						// wrapper:document.body//可以指定对应容器，也可以不指定容器，直接获取元素，再手动插入对应dom元素
+					});
+					document.body.appendChild(vm.get());
 
+					document.getElementById("age").addEventListener("click",function(){
+						data.age++;//只需要修改属性，html就会重新渲染
+					});
+
+					document.getElementById("firstName").addEventListener("keyup",function(e){
+						data.name=this.value;//只需要修改属性，html就会重新渲染
+					});
+				})();
+			</script>
+		</body>
+		</html>
 		
-# Git地址
-  https://github.com/devil1989/databind/
+
+	感谢阅读!!
