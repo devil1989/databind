@@ -9,11 +9,22 @@
 <body>
 	<template id="inner" type="text/template">
 		<!-- 只支持单个属性或者多个属性绑定，不支持计算 -->
+		<ul>
+			<li>
+				<span>点击下面+，触发的事件只是修改了数据的值，对应的html就会自动重新渲染</span>
+			</li>
+			<li>
+				<span>修改input元素里面的值，触发的事件只是修改了对应的数据，html就会自动重新渲染</span>
+			</li>
+		</ul>
+		
+		
 		<div title="{{des}}">
 			<div>
 				<ul id="list">
 					<li ><span >age:</span><input  type="text" name="" value="{{age}}" ><span id="age" style="float: left;">+</span></li>
-					<li><span>name:</span><input type="text" name="" value="{{name}}"></li>
+					<li><span>name:</span><input id="firstName" type="text" name="" value="{{name}}"></li>
+					<li><span>{{name}}</span></li>
 				</ul>
 			</div>
 			
@@ -30,7 +41,11 @@
 			document.body.appendChild(vm.get());
 
 			document.getElementById("age").addEventListener("click",function(){
-				data.age++;
+				data.age++;//只需要修改属性，html就会重新渲染
+			});
+
+			document.getElementById("firstName").addEventListener("keyup",function(e){
+				data.name=this.value;//只需要修改属性，html就会重新渲染
 			});
 		})();
 	</script>
