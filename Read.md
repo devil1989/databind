@@ -320,8 +320,8 @@
 		
 		
 # 总结
-	简单地调用new ViewModel({data:data,template:template})，
-	完成了model和view的绑定,ViewModel内部大致执行顺序是：
+	简单地调用new ViewModel({data:data,template:template})，完成了model和view的绑定，
+	ViewModel内部大致执行顺序是：
 
 	1. 创建数据监控对象this.observer，该对象监控data（监控以后，data的属性改变，
 	   就会执行defineProperty中的set函数，set函数里面添加了publish发布函数）
@@ -332,9 +332,9 @@
 	3. 最后，改变data里面的属性，会自动触发defineProperty中的set函数，set函数调用publish函数，
 	   publish会根据key的名称，找到对应的需要执行的函数列表，依次执行所有函数
 	
-	4. 使用方法： new VM({data:数据,template:模板});
 
-	5. demo:(Git地址:https://github.com/devil1989/databind/,只要把代码pull下来，在浏览器中打开demo.html即可,demo.html文件内容如下)
+#demo
+    (Git地址:https://github.com/devil1989/databind/,把代码拉下来，在浏览器中打开demo.html即可,demo.html文件内容如下)
 		<!DOCTYPE html>
 		<html lang="en">
 		<head>
