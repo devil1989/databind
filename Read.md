@@ -388,13 +388,14 @@
 			</script>
 		</body>
 		</html>
-		
-		使用场景说明：
-			当我们想要修改页面某个元素的信息，但又不想费劲地查找dom元素再去修改元素的值，
-			这种情况下，可以用demo中的数据绑定，只需修改数据的值，就实现了页面元素重新渲染
-			请看下面的gif动画中展示的，只要修改data.age和data.name,页面元素就自动重新渲染了
 
-![avatar](https://n1image.hjfile.cn/zhuanti/2017/12/28/2a04e591df097974df7c22f2ce52f4d9.gif)
+
+
+#使用场景说明：
+	当我们想要修改页面某个元素的信息，但又不想费劲地查找dom元素再去修改元素的值，
+	这种情况下，可以用demo中的数据绑定，只需修改数据的值，就实现了页面元素重新渲染
+	请看下面的gif动画中展示的，只要修改data.age和data.name,页面元素就自动重新渲染了
+	![avatar](https://n1image.hjfile.cn/zhuanti/2017/12/28/2a04e591df097974df7c22f2ce52f4d9.gif)
 		
 
 
