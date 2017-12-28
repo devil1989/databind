@@ -332,6 +332,8 @@
 	3. 最后，改变data里面的属性，会自动触发defineProperty中的set函数，set函数调用publish函数，
 	   publish会根据key的名称，找到对应的需要执行的函数列表，依次执行所有函数
 	
+#Git地址
+	https://github.com/devil1989/databind/
 
 #demo
 
@@ -345,19 +347,6 @@
 		</head>
 		<body>
 			<template id="inner" type="text/template">
-				<!-- 只支持单个属性，不支持计算，也不支持数组元素的添加删除监控
-				，这个需要额外增加功能来实现，这个demo只是简单介绍大致原理 -->
-				<ul>
-					<li>
-						<span>点击下面+，触发的事件只是修改了数据的值，
-						对应的html就会自动重新渲染</span>
-					</li>
-					<li>
-						<span>修改input元素里面的值，触发的事件只是修改了
-						对应的数据，html就会自动重新渲染</span>
-					</li>
-				</ul>
-				
 				
 				<div title="{{des}}">
 					<div>
@@ -399,8 +388,17 @@
 			</script>
 		</body>
 		</html>
+		
+		使用场景说明：
+			当我们想要修改页面某个元素的信息，但又不想费劲地查找dom元素再去修改元素的值，
+			这种情况下，可以用demo中的数据绑定，只需修改数据的值，就实现了页面元素重新渲染
+			请看下面的gif动画中展示的，只要修改data.age和data.name,页面元素就自动重新渲染了
 
-#Git地址
-	https://github.com/devil1989/databind/
+		<img src="https://n1image.hjfile.cn/zhuanti/2017/12/28/2a04e591df097974df7c22f2ce52f4d9.gif">
+		
 
-	感谢阅读!!
+
+
+本demo只是简单实现数据绑定，很多功能并未实现，只是提供一种思路，抛砖引玉;
+如果对上述代码中的Observer类的代码不是很理解，可以先了解下观察者模式以及实现原理；
+感谢大家的阅读!!
